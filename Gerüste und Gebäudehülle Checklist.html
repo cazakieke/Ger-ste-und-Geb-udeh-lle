@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiGeKompass - Gerüste & Gebäudehülle</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 10px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 5px; font-size: 24px; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; flex-wrap: wrap; }
+        .tab { padding: 12px 20px; background: #f0f0f0; border: none; cursor: pointer; border-radius: 5px 5px 0 0; font-size: 16px; transition: all 0.3s; }
+        .tab:hover { background: #e0e0e0; }
+        .tab.active { background: #00BCD4; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .project-info { background: #E0F7FA; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 4px solid #00BCD4; }
+        .project-info input, .project-info select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .checklist-section { border: 1px solid #ddd; margin-bottom: 15px; border-radius: 5px; overflow: hidden; }
+        .section-header { background: #00BCD4; color: white; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-header:hover { background: #00ACC1; }
+        .section-content { display: none; padding: 15px; }
+        .section-content.active { display: block; }
+        .checklist-item { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 15px; border-radius: 5px; position: relative; }
+        .status-badge { position: absolute; top: 10px; right: 10px; padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .status-offen { background: #FFC107; color: #000; }
+        .status-erfuellt { background: #4CAF50; color: white; }
+        .status-nicht-erfuellt { background: #F44336; color: white; }
+        .status-nicht-anwendbar { background: #9E9E9E; color: white; }
+        .phase-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+        .phase-planung { background: #E3F2FD; color: #1565C0; }
+        .phase-ausfuehrung { background: #FFF3E0; color: #E65100; }
+        .item-title { font-weight: bold; color: #2c3e50; margin-bottom: 10px; font-size: 16px; padding-right: 120px; }
+        .item-description { color: #555; margin-bottom: 15px; font-size: 14px; line-height: 1.5; }
+        .status-group { margin: 15px 0; }
+        .status-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 15px; margin: 10px 0; }
+        .radio-group label { display: flex; align-items: center; font-weight: normal; cursor: pointer; }
+        .radio-group input[type="radio"] { margin-right: 5px; cursor: pointer; }
+        input[type="text"], input[type="date"], textarea, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        textarea { min-height: 80px; resize: vertical; }
+        .photo-section { margin: 15px 0; }
+        .photo-button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .photo-button:hover { background: #0b7dda; }
+        .photo-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .photo-item { position: relative; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-info { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; font-size: 10px; }
+        .remove-photo { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; }
+        .action-plan { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; display: none; }
+        .action-plan.show { display: block; }
+        .history-section { background: #B2EBF2; padding: 10px; margin: 15px 0; border-radius: 4px; border-left: 4px solid #00BCD4; }
+        .history-entry { background: white; padding: 10px; margin: 8px 0; border-radius: 4px; border-left: 3px solid #0097A7; }
+        .history-header { font-weight: bold; color: #006064; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .history-content { font-size: 13px; color: #555; margin-top: 5px; }
+        .history-toggle { background: #00BCD4; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-top: 10px; }
+        .save-button { background: #00BCD4; color: white; padding: 15px 30px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 20px; }
+        .save-button:hover { background: #00ACC1; }
+        .export-button { background: #0097A7; color: white; padding: 15px 30px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 10px; }
+        .export-button:hover { background: #00838F; }
+        .applicability-section { background: #E0F7FA; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 4px solid #00BCD4; }
+        .field-group { margin: 10px 0; }
+        .field-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .history-list { max-height: 600px; overflow-y: auto; }
+        .project-card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; transition: all 0.3s; }
+        .project-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); transform: translateY(-2px); }
+        .project-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .project-card-title { font-weight: bold; font-size: 18px; color: #333; }
+        .project-card-date { color: #666; font-size: 14px; }
+        .project-card-stats { display: flex; gap: 15px; flex-wrap: wrap; }
+        .stat-item { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .delete-project { background: #F44336; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .filter-section { background: #f5f5f5; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .filter-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .new-project-button { background: #0097A7; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 20px; }
+        .new-project-button:hover { background: #00838F; }
+        .timeline { position: relative; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #00BCD4; }
+        .timeline-item { position: relative; padding-bottom: 20px; }
+        .timeline-item::before { content: ''; position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #00BCD4; border: 2px solid white; box-shadow: 0 0 0 2px #00BCD4; }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            h1 { font-size: 20px; }
+            .radio-group { flex-direction: column; gap: 10px; }
+            .photo-item { width: 100%; height: 200px; }
+            .tabs { gap: 5px; }
+            .tab { padding: 10px 15px; font-size: 14px; }
+            .item-title { padding-right: 10px; }
+            .status-badge { position: static; display: inline-block; margin-bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ SiGeKompass - Sicherheits-Checklisten</h1>
+        <div class="subtitle">Modul: <strong>Gerüste & Gebäudehülle</strong> | SiGeKompass 1.2</div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'checklist')">📋 Checkliste</button>
+            <button class="tab" onclick="switchTab(event, 'history')">📜 Verlauf</button>
+            <button class="tab" onclick="switchTab(event, 'projects')">📁 Projekte</button>
+        </div>
+
+        <div id="tab-checklist" class="tab-content active">
+            <div class="project-info">
+                <h3>Projektinformationen</h3>
+                <div class="field-group">
+                    <label>Projekt / Bereich:</label>
+                    <input type="text" id="projectName" placeholder="Name des Projekts oder Bereichs">
+                </div>
+                <div class="field-group">
+                    <label>Revision / Datum:</label>
+                    <input type="date" id="revisionDate">
+                </div>
+                <div class="field-group">
+                    <label>Projekt-ID:</label>
+                    <input type="text" id="projectId" readonly>
+                </div>
+            </div>
+            <div id="checklistContainer"></div>
+            <button class="save-button" onclick="saveChecklist()">💾 Checkliste Speichern</button>
+            <button class="export-button" onclick="exportPDF()">📄 Als PDF Exportieren</button>
+        </div>
+
+        <div id="tab-history" class="tab-content">
+            <div class="filter-section">
+                <h3>Filter</h3>
+                <div class="filter-group">
+                    <select id="filterProject" onchange="filterHistory()"><option value="">Alle Projekte</option></select>
+                    <select id="filterStatus" onchange="filterHistory()">
+                        <option value="">Alle Status</option>
+                        <option value="offen">Offen</option>
+                        <option value="erfuellt">Erfüllt</option>
+                        <option value="nicht-erfuellt">Nicht Erfüllt</option>
+                        <option value="nicht-anwendbar">Nicht Anwendbar</option>
+                    </select>
+                    <input type="date" id="filterDateFrom" onchange="filterHistory()">
+                    <input type="date" id="filterDateTo" onchange="filterHistory()">
+                </div>
+            </div>
+            <div id="historyContainer" class="history-list"></div>
+        </div>
+
+        <div id="tab-projects" class="tab-content">
+            <button class="new-project-button" onclick="createNewProject()">➕ Neues Projekt Erstellen</button>
+            <div id="projectsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const checklistData = [
+            {
+                code: "EL-E10",
+                category: "E10 · Gerüstbau",
+                reference: "BetrSichV §§3–4; TRBS 2121 mit einschlägigem Teil; ASR A2.1; DGUV Vorschrift 38",
+                docAssignment: "SiGePlan · Projektakte · Unterrichtung · Unterlage für spätere Arbeiten",
+                items: [
+                    { id: "E10-01", title: "01 Gerüstnutzung und Übergabe festlegen", phase: "Planung", description: "Nutzer, Last-/Breitenanforderungen, Verankerung, Zugänge und Änderungen abstimmen; erforderliche Prüfungen zuordnen.", evidence: "Aufbau-/Verwendungsplan und Prüfkonzept" },
+                    { id: "E10-02", title: "02 Gerüst vor Verwendung kontrollieren", phase: "Ausführung", description: "Kennzeichnung und Freigabe, Zugänge, Beläge, Seitenschutz und sichtbare Mängel prüfen; Prüfbericht referenzieren.", evidence: "Prüf-/Übergabeprotokoll und Nutzerkontrolle" },
+                    { id: "E10-03", title: "03 Gemeinsame Einrichtungen und Übergabe prüfen", phase: "Planung", description: "Für Seitenschutz, Öffnungsabdeckung, Gerüst/Zugang und Sperrbereiche Standort, Nutzer, Zeitfenster, Bereitstellung/Pflege und Prüfverantwortung mit den Folgegewerken abstimmen.", evidence: "Abgestimmter Einrichtungs-/Übergabeplan" },
+                    { id: "E10-04", title: "04 Spätere Arbeiten und Zugänge prüfen (RAB 32)", phase: "Planung", description: "Dauerhafte Wartungszugänge, Absturzsicherungen und zulässige Belastungen dokumentieren. Bauteil, vorhersehbare Tätigkeit, sicheren Zugang, Intervall und Empfänger konkret abgleichen.", evidence: "Bauteilbezogene Unterlage und Bestandspläne" }
+                ]
+            },
+            {
+                code: "EL-E11",
+                category: "E11 · Dacharbeiten",
+                reference: "BetrSichV §§3–4; TRBS 2121 mit einschlägigem Teil; ASR A2.1; DGUV Vorschrift 38",
+                docAssignment: "SiGePlan · Projektakte · Unterrichtung · Unterlage für spätere Arbeiten",
+                items: [
+                    { id: "E11-01", title: "01 Dachzugang und Absturzschutz planen", phase: "Planung", description: "Dachränder, Lichtöffnungen, Durchsturzflächen und Rettung prüfen; kollektive Schutzmaßnahmen vorrangig berücksichtigen.", evidence: "Dach-/Sicherungskonzept mit Rettungszugang" },
+                    { id: "E11-02", title: "02 Dacharbeitsbereich kontrollieren", phase: "Ausführung", description: "Öffnungen, Rand-/Durchsturzsicherung, Zugänge und Witterungsbedingungen vor Arbeitsbeginn prüfen.", evidence: "Freigabe und Kontrollprotokoll" },
+                    { id: "E11-03", title: "03 Gemeinsame Einrichtungen und Übergabe prüfen", phase: "Planung", description: "Für Seitenschutz, Öffnungsabdeckung, Gerüst/Zugang und Sperrbereiche Standort, Nutzer, Zeitfenster, Bereitstellung/Pflege und Prüfverantwortung mit den Folgegewerken abstimmen.", evidence: "Abgestimmter Einrichtungs-/Übergabeplan" },
+                    { id: "E11-04", title: "04 Spätere Arbeiten und Zugänge prüfen (RAB 32)", phase: "Planung", description: "Dauerhafte Wartungszugänge, Absturzsicherungen und zulässige Belastungen dokumentieren. Bauteil, vorhersehbare Tätigkeit, sicheren Zugang, Intervall und Empfänger konkret abgleichen.", evidence: "Bauteilbezogene Unterlage und Bestandspläne" }
+                ]
+            },
+            {
+                code: "EL-E12",
+                category: "E12 · Fassadenarbeiten",
+                reference: "BetrSichV §§3–4; TRBS 2121 mit einschlägigem Teil; ASR A2.1; DGUV Vorschrift 38",
+                docAssignment: "SiGePlan · Projektakte · Unterrichtung · Unterlage für spätere Arbeiten",
+                items: [
+                    { id: "E12-01", title: "01 Fassadenarbeiten mit Umgebung abstimmen", phase: "Planung", description: "Gerüst-/Bühnennutzung, herabfallende Teile, Verkehrsflächen und Parallelgewerke zeitlich und räumlich trennen.", evidence: "Fassaden-/Sperrzonenplan" },
+                    { id: "E12-02", title: "02 Fassadenschutz und Zugänge prüfen", phase: "Ausführung", description: "Seitenschutz, sichere Arbeitsplätze, Absperrungen und Schutz der darunterliegenden Bereiche kontrollieren.", evidence: "Begehungs- und Übergabenachweis" },
+                    { id: "E12-03", title: "03 Gemeinsame Einrichtungen und Übergabe prüfen", phase: "Planung", description: "Für Seitenschutz, Öffnungsabdeckung, Gerüst/Zugang und Sperrbereiche Standort, Nutzer, Zeitfenster, Bereitstellung/Pflege und Prüfverantwortung mit den Folgegewerken abstimmen.", evidence: "Abgestimmter Einrichtungs-/Übergabeplan" },
+                    { id: "E12-04", title: "04 Spätere Arbeiten und Zugänge prüfen (RAB 32)", phase: "Planung", description: "Dauerhafte Wartungszugänge, Absturzsicherungen und zulässige Belastungen dokumentieren. Bauteil, vorhersehbare Tätigkeit, sicheren Zugang, Intervall und Empfänger konkret abgleichen.", evidence: "Bauteilbezogene Unterlage und Bestandspläne" }
+                ]
+            },
+            {
+                code: "EL-E13",
+                category: "E13 · Fenster / Außentüren",
+                reference: "BetrSichV §§3–4; TRBS 2121 mit einschlägigem Teil; ASR A2.1; DGUV Vorschrift 38",
+                docAssignment: "SiGePlan · Projektakte · Unterrichtung · Unterlage für spätere Arbeiten",
+                items: [
+                    { id: "E13-01", title: "01 Fenstertransport und Öffnungsschutz planen", phase: "Planung", description: "Elementgewichte, Transportweg, Hebehilfen und Schutz offener Fassadenbereiche festlegen.", evidence: "Montage-/Transportkonzept" },
+                    { id: "E13-02", title: "02 Montageöffnungen und Hebehilfen prüfen", phase: "Ausführung", description: "Absturzsicherung, Glastransportmittel, Sperrzonen und Freigabe nach Einbau kontrollieren.", evidence: "Montagekontrolle und Übergabeprotokoll" },
+                    { id: "E13-03", title: "03 Gemeinsame Einrichtungen und Übergabe prüfen", phase: "Planung", description: "Für Seitenschutz, Öffnungsabdeckung, Gerüst/Zugang und Sperrbereiche Standort, Nutzer, Zeitfenster, Bereitstellung/Pflege und Prüfverantwortung mit den Folgegewerken abstimmen.", evidence: "Abgestimmter Einrichtungs-/Übergabeplan" },
+                    { id: "E13-04", title: "04 Spätere Arbeiten und Zugänge prüfen (RAB 32)", phase: "Planung", description: "Dauerhafte Wartungszugänge, Absturzsicherungen und zulässige Belastungen dokumentieren. Bauteil, vorhersehbare Tätigkeit, sicheren Zugang, Intervall und Empfänger konkret abgleichen.", evidence: "Bauteilbezogene Unterlage und Bestandspläne" }
+                ]
+            }
+        ];
+
+        let currentProjectId = null;
+        let allHistory = [];
+
+        function init() {
+            loadAllHistory();
+            generateProjectId();
+            renderChecklist();
+            renderProjects();
+            renderHistory();
+            updateFilterOptions();
+            document.getElementById('revisionDate').valueAsDate = new Date();
+        }
+
+        function generateProjectId() {
+            currentProjectId = 'PRJ-GG-' + Date.now();
+            document.getElementById('projectId').value = currentProjectId;
+        }
+
+        function createNewProject() {
+            if (confirm('Möchten Sie ein neues Projekt erstellen? Nicht gespeicherte Änderungen gehen verloren.')) {
+                generateProjectId();
+                document.getElementById('projectName').value = '';
+                document.getElementById('revisionDate').valueAsDate = new Date();
+                renderChecklist();
+                document.querySelector('.tab').click();
+            }
+        }
+
+        function loadProject(projectId) {
+            const history = allHistory.filter(h => h.projectId === projectId);
+            if (history.length === 0) return;
+            const latestEntry = history[history.length - 1];
+            currentProjectId = projectId;
+            document.getElementById('projectId').value = projectId;
+            document.getElementById('projectName').value = latestEntry.projectName;
+            document.getElementById('revisionDate').value = latestEntry.revisionDate;
+            renderChecklist(latestEntry.data);
+            document.querySelector('.tab').click();
+        }
+
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if (tabName === 'history') { renderHistory(); updateFilterOptions(); }
+            else if (tabName === 'projects') { renderProjects(); }
+        }
+
+        function renderChecklist(savedData = null) {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+            checklistData.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'checklist-section';
+                sectionDiv.innerHTML = `
+                    <div class="section-header" onclick="toggleSection(${sectionIndex})">
+                        <div><strong>${section.category}</strong> <small>(${section.code})</small><br>
+                        <small>Bezug: ${section.reference}</small><br>
+                        <small>Dokumentzuordnung: ${section.docAssignment}</small></div>
+                        <span id="arrow-${sectionIndex}">▼</span>
+                    </div>
+                    <div class="section-content" id="section-${sectionIndex}">
+                        <div class="applicability-section">
+                            <label>Anwendbarkeit:</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="applicability-${sectionIndex}" value="ja"> ✓ Ja</label>
+                                <label><input type="radio" name="applicability-${sectionIndex}" value="nein"> ✗ Nein</label>
+                                <label><input type="radio" name="applicability-${sectionIndex}" value="zu-klaeren"> ? Zu klären</label>
+                            </div>
+                            <input type="text" id="app-reason-${sectionIndex}" placeholder="Begründung">
+                        </div>
+                        ${section.items.map((item, itemIndex) => createItemHTML(item, sectionIndex, itemIndex)).join('')}
+                        <div class="field-group">
+                            <label>Prüfung / Freigabe:</label>
+                            <input type="text" id="approval-${sectionIndex}" placeholder="Name des Verantwortlichen">
+                        </div>
+                        <div class="field-group">
+                            <label>Datum / Unterschrift:</label>
+                            <input type="date" id="approval-date-${sectionIndex}">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(sectionDiv);
+            });
+            if (savedData) loadSavedData(savedData);
+        }
+
+        function createItemHTML(item, sectionIndex, itemIndex) {
+            const itemId = `item-${sectionIndex}-${itemIndex}`;
+            const fullItemId = `${checklistData[sectionIndex].code}-${item.id}`;
+            const itemHistory = getItemHistory(fullItemId);
+            const currentStatus = itemHistory.length > 0 ? itemHistory[itemHistory.length - 1].status : '';
+            const statusBadge = getStatusBadge(currentStatus);
+            const phaseClass = item.phase === 'Planung' ? 'phase-planung' : 'phase-ausfuehrung';
+            
+            return `
+                <div class="checklist-item">
+                    ${statusBadge}
+                    <div class="item-title">${item.title} <span class="phase-badge ${phaseClass}">[${item.phase}]</span></div>
+                    <div class="item-description">${item.description}</div>
+                    <div><small><strong>Nachweis:</strong> ${item.evidence}</small></div>
+                    <div class="status-group">
+                        <label>Status:</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="status-${itemId}" value="offen" onchange="handleStatusChange('${itemId}')"> ⭕ Offen</label>
+                            <label><input type="radio" name="status-${itemId}" value="erfuellt" onchange="handleStatusChange('${itemId}')"> ✅ Erfüllt</label>
+                            <label><input type="radio" name="status-${itemId}" value="nicht-erfuellt" onchange="handleStatusChange('${itemId}')"> ❌ Nicht erfüllt</label>
+                            <label><input type="radio" name="status-${itemId}" value="nicht-anwendbar" onchange="handleStatusChange('${itemId}')"> ➖ Nicht anwendbar</label>
+                        </div>
+                    </div>
+                    <div class="action-plan" id="action-${itemId}">
+                        <label><strong>📝 Maßnahmenplan zur Korrektur:</strong></label>
+                        <textarea id="action-text-${itemId}" placeholder="Beschreiben Sie die notwendigen Maßnahmen zur Korrektur..."></textarea>
+                    </div>
+                    <div class="field-group"><label>Verantwortlich:</label><input type="text" id="responsible-${itemId}" placeholder="Name des Verantwortlichen"></div>
+                    <div class="field-group"><label>Frist:</label><input type="date" id="deadline-${itemId}"></div>
+                    <div class="field-group"><label>Geprüft am:</label><input type="date" id="checked-${itemId}"></div>
+                    <div class="field-group"><label>Nachweis / Ablage / Maßnahmen / Begründung:</label><textarea id="notes-${itemId}" placeholder="Zusätzliche Bemerkungen..."></textarea></div>
+                    <div class="photo-section">
+                        <label><strong>📸 Fotografische Nachweise:</strong></label>
+                        <button class="photo-button" onclick="capturePhoto('${itemId}')">📷 Foto Aufnehmen</button>
+                        <input type="file" id="file-${itemId}" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto('${itemId}', event)">
+                        <div class="photo-preview" id="photos-${itemId}"></div>
+                    </div>
+                    ${itemHistory.length > 0 ? `
+                        <div class="history-section">
+                            <strong>📜 Verlauf (${itemHistory.length} Einträge)</strong>
+                            <button class="history-toggle" onclick="toggleItemHistory('${itemId}')">Verlauf anzeigen/verbergen</button>
+                            <div id="item-history-${itemId}" style="display:none; margin-top:10px;">
+                                <div class="timeline">
+                                    ${itemHistory.map(h => `
+                                        <div class="timeline-item">
+                                            <div class="history-entry">
+                                                <div class="history-header">
+                                                    <span>${getStatusIcon(h.status)} ${getStatusText(h.status)}</span>
+                                                    <span>${new Date(h.timestamp).toLocaleString('de-DE')}</span>
+                                                </div>
+                                                <div class="history-content">
+                                                    ${h.responsible ? `<strong>Verantwortlich:</strong> ${h.responsible}<br>` : ''}
+                                                    ${h.notes ? `<strong>Bemerkung:</strong> ${h.notes}<br>` : ''}
+                                                    ${h.actionPlan ? `<strong>Maßnahmen:</strong> ${h.actionPlan}<br>` : ''}
+                                                    ${h.photos && h.photos.length > 0 ? `<strong>Fotos:</strong> ${h.photos.length}<br>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).reverse().join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function getStatusBadge(status) {
+            if (!status) return '';
+            const badges = {
+                'offen': '<span class="status-badge status-offen">Offen</span>',
+                'erfuellt': '<span class="status-badge status-erfuellt">Erfüllt</span>',
+                'nicht-erfuellt': '<span class="status-badge status-nicht-erfuellt">Nicht erfüllt</span>',
+                'nicht-anwendbar': '<span class="status-badge status-nicht-anwendbar">Nicht anwendbar</span>'
+            };
+            return badges[status] || '';
+        }
+
+        function getStatusIcon(status) {
+            const icons = { 'offen': '⭕', 'erfuellt': '✅', 'nicht-erfuellt': '❌', 'nicht-anwendbar': '➖' };
+            return icons[status] || '⭕';
+        }
+
+        function getStatusText(status) {
+            const texts = { 'offen': 'Offen', 'erfuellt': 'Erfüllt', 'nicht-erfuellt': 'Nicht erfüllt', 'nicht-anwendbar': 'Nicht anwendbar' };
+            return texts[status] || 'Unbekannt';
+        }
+
+        function toggleItemHistory(itemId) {
+            const historyDiv = document.getElementById(`item-history-${itemId}`);
+            historyDiv.style.display = historyDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleStatusChange(itemId) {
+            const status = getRadioValue(`status-${itemId}`);
+            const actionPlan = document.getElementById(`action-${itemId}`);
+            if (status === 'nicht-erfuellt') { actionPlan.classList.add('show'); }
+            else { actionPlan.classList.remove('show'); }
+        }
+
+        function toggleSection(index) {
+            const content = document.getElementById(`section-${index}`);
+            const arrow = document.getElementById(`arrow-${index}`);
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                arrow.textContent = '▼';
+            } else {
+                content.classList.add('active');
+                arrow.textContent = '▲';
+            }
+        }
+
+        function capturePhoto(itemId) {
+            document.getElementById(`file-${itemId}`).click();
+        }
+
+        function handlePhoto(itemId, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                getLocation(function(position) {
+                    addPhotoPreview(itemId, e.target.result, position);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => callback(position),
+                    () => callback(null),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                callback(null);
+            }
+        }
+
+        function addPhotoPreview(itemId, imageData, position) {
+            const container = document.getElementById(`photos-${itemId}`);
+            const photoDiv = document.createElement('div');
+            photoDiv.className = 'photo-item';
+            const now = new Date();
+            const dateTime = now.toLocaleString('de-DE');
+            const coords = position ? `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}` : 'Standort nicht verfügbar';
+            photoDiv.innerHTML = `
+                <img src="${imageData}" alt="Nachweis">
+                <div class="photo-info">📅 ${dateTime}<br>📍 ${coords}</div>
+                <button class="remove-photo" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(photoDiv);
+        }
+
+        function saveChecklist() {
+            const projectName = document.getElementById('projectName').value;
+            const revisionDate = document.getElementById('revisionDate').value;
+            if (!projectName || !revisionDate) { alert('⚠️ Bitte füllen Sie Projektname und Datum aus.'); return; }
+            const data = collectChecklistData();
+            const historyEntry = {
+                projectId: currentProjectId,
+                projectName: projectName,
+                revisionDate: revisionDate,
+                timestamp: new Date().toI
